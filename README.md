@@ -59,10 +59,10 @@ Also on the front-end, the following technologies were applied: Javascript - to 
   - planner.js - file containing the entire set of JavaScript functions executed during system execution to manipulate the DOM and interact with the Django front-end framework for data management.
   - app.js - React component used on the home screen.
   - styles.scss - project style.
-- templates - stores all HTML files.
-- models - user data models: *User, Finance, Study, Goal and Comment*.
-- urls.py - Contains all the URL paths for running the system, as well as login and logout.
-- views.py - Contains all the visualization functions for authenticating and manipulating user data.
+- `templates` - stores all HTML files.
+- `models` - user data models: *User, Finance, Study, Goal and Comment*.
+- `urls.py` - Contains all the URL paths for running the system, as well as login and logout.
+- `views.py` - Contains all the visualization functions for authenticating and manipulating user data.
 
 **How to run the application**
 
