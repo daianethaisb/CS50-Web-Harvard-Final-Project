@@ -54,7 +54,7 @@ Also on the front-end, the following technologies were applied: Javascript - to 
 
 **planner** - main directory of the ***Planner* app**
 
-- ` `static / planner - contains all static files.
+- ` static / planner` - contains all static files.
   - image - contains all the images created by me to illustrate the options available on the home screen, as well as the logo developed for the project.
   - planner.js - file containing the entire set of JavaScript functions executed during system execution to manipulate the DOM and interact with the Django front-end framework for data management.
   - app.js - React component used on the home screen.
