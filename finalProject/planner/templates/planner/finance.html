@@ -1,0 +1,599 @@
+{% extends "planner/layout.html" %}
+
+{% block body %}
+    <div class="align-right">
+        <a href="{% url 'index' %}">Back to Homepage</a>
+    </div>
+    
+    <h1>Create a New Finance</h1>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("financePending").onclick = check;
+        });
+
+        function check(){
+            const checkbox = document.getElementById("financePending");
+            const isChecked = checkbox.checked;
+            if (isChecked) {
+                checkbox.value="True"
+            } else {
+                checkbox.value="False"
+            }
+        }
+
+        function checkCancelPending(id, event){
+            let checkbox;
+            let isChecked;
+
+            if(event == 1){
+                checkbox = document.getElementById(`changePendingAll_${id}`);
+                isChecked = checkbox.checked;
+            }else if (event == 2){
+                checkbox = document.getElementById(`changePendingEntry_${id}`);
+                isChecked = checkbox.checked;
+            }else if (event == 3){
+                checkbox = document.getElementById(`changePendingExit_${id}`);
+                isChecked = checkbox.checked;
+            }else if (event == 4){
+                checkbox = document.getElementById(`changePending_${id}`);
+                isChecked = checkbox.checked;
+            }
+            
+            if (isChecked) {
+                checkbox.checked = false
+            } else {
+                checkbox.checked = true
+            }
+        }
+
+    </script>
+
+    {% if user.is_authenticated %}
+        
+        <div class="modal fade" id="newFinanceModal" tabindex="-1" aria-labelledby="newFinanceLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="{% url 'createFinance' %}"  method="POST">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="newFinanceLabel">Create a New Finance</h5>
+                            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-outline">
+                                <input type="text" name="title" id="financeTitle" class="form-control" data-mdb-showcounter="true" maxlength="40"/>
+                                <label class="form-label" for="financeTitle">Title</label>
+                                <div class="form-helper"></div>
+                            </div><br>
+                            <div class="form-outline">
+                                <textarea class="form-control" name="description" id="financeDescription" rows="4" data-mdb-showcounter="true" maxlength="120"></textarea>
+                                <label class="form-label" for="financeDescription">Description</label>
+                                <div class="form-helper"></div>
+                            </div><br>
+                            <div class="row">
+                                <div class="main col-lg-3">
+                                    <div class="form-check">
+                                        <input name="concluded" class="form-check-input" type="checkbox" value="True" id="financePending" />
+                                        <label class="form-check-label" for="financePending">Pending</label>
+                                    </div><br>
+                                </div>
+                                <div class="sidebar col-lg-3">
+                                    <div class="form-outline">
+                                        <input type="number" name="value" id="financeValue" class="form-control" step="any"/>
+                                        <label class="form-label" for="financeValue">Value</label>
+                                    </div><br>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="main col-lg-3">
+                                    <div class="mb-3">
+                                        <label for="formFileSm" class="form-label">Entry Tipe</label>
+                                    </div>
+                                </div>
+                                <div class="sidebar col-lg-9">
+                                    <div class="mb-3">
+                                        <select name="entry" class="form-select form-select-lg mb-3" aria-label=".form-select-lg" id="entry">
+                                            <option value="entry">Entry</option>
+                                            <option value="exit">Exit</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <label for="formFileSm" class="form-label">Category</label>
+                            <select name="category" class="form-select" aria-label="Default select example" id="category">
+                                <option value="House">House</option>
+                                <option value="Health">Health</option>
+                                <option value="Leisure">Leisure</option>
+                                <option value="Feeding">Feeding</option>
+                                <option value="Fixed Expense">Fixed Expense</option>
+                                <option value="Variable Expense">Variable Expense</option>
+                                <option value="Other">Other</option>
+                            </select><br>
+                        </div>
+                        <div class="modal-footer">
+                            <input type="reset"  class="btn btn-secondary" name="clean" value="Clear Form">
+                            <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary" data-mdb-dismiss="modal">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <form action="{% url 'finance' %}" method="GET">
+            <div class="row">
+                <div class="main col-lg-10">
+                    <div class="input-group">
+                        <div class="form-outline ">
+                            <input id="search-input" name="search" type="search" id="form1" class="form-control" value="{{ search }}"/>
+                            <label class="form-label" for="form1">Search for a Finance Title</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="sidebar col-lg-2" style="text-align: center !important;">
+                    <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#newFinanceModal">
+                        Create a New Finance
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div>
+            <ul class="nav justify-content-center" style="margin: 8px">
+                <button class="btnMenu btn text-white" data-page="page1">All Finances
+                    <span class="badge bg-danger ms-2">{{ allFinancesCount }}</span>
+                </button>
+                <button class="btnMenu btn text-white" data-page="page2">Entries
+                    <span class="badge bg-danger ms-2">{{ entryFinancesCount }}</span>
+                </button>
+                <button class="btnMenu btn text-white" data-page="page3">Exites
+                    <span class="badge bg-danger ms-2">{{ exitFinancesCount }}</span>
+                </button>
+                <button class="btnMenu btn text-white" data-page="page4">Pending
+                    <span class="badge bg-danger ms-2" id="countPending">{{ pendingFinancesCount }}</span>
+                </button>
+            </ul>
+            
+            <div class="card card_finances" id="page1">
+                {% for finance in allFinances %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ finance.title }}</h5>
+                            <p class="card-text">{{ finance.description }}</p>
+                            <div>Value: {{ finance.value }}</div>
+                            <div>Category: {{ finance.category }}</div>
+                            {% if finance.entry == "entry" %}
+                                <div style="color: green">Entry</div>
+                            {% else %}
+                                <div style="color: red">Exit</div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="main col-lg-2">
+                                    <small>{{ finance.finance_date }}</small><br>
+                                </div>
+                                <div class="sidebar col-lg-4">
+                                    {% if finance.concluded %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="True" id="changePendingAll_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalAll_{{ finance.id }}" checked/>
+                                            <label class="form-check-label" for="changePendingAll_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Pending</div>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="False" id="changePendingAll_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalAll_{{ finance.id }}"/>
+                                            <label class="form-check-label" for="changePendingAll_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Closed</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <form action="{% url 'removeFinance' finance.id %}"  method="POST">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModalAll_{{ finance.id }}">
+                                    Edit Description
+                                </button>
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="confirmModalAll_{{ finance.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">Do you want to change the pending status of this finance?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancelPending({{ finance.id }}, 1)">Cancel</button>
+                                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changePending({{ finance.id }}, 1)">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editModalAll_{{ finance.id }}" tabindex="-1" aria-labelledby="editFinanceLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form action="{% url 'editFinance' finance.id %}"  method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editFinanceLabel">{{ finance.title}}</h5>
+                                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-outline">
+                                            <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ finance.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ finance.description}}</textarea>
+                                            <label class="form-label" for="salveEdit_{{ finance.id }}">Description</label>
+                                            <div class="form-helper"></div>
+                                        </div><br>
+                                        <div class="form-outline">
+                                            <input type="number" name="valueEdit" id="valueFinanceEdit" class="form-control" value="{{ finance.value}}"/>
+                                            <label class="form-label" for="valueFinanceEdit">Value</label>
+                                        </div><br>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <nav aria-label="Page navigation" >
+                    <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                    
+                        {% if allFinances.has_previous %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allFinances.previous_page_number }}">
+                                <span aria-hidden="true">&laquo;</span> Previous
+                            </a></li>
+                        {% endif %}
+                        
+                        {% if allFinances.has_next %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allFinances.next_page_number }}">Next 
+                                <span aria-hidden="true">&raquo;</span>
+                            </a></li>
+                        {% endif %}
+            
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="card card_finances" id="page2" style="display: none;">
+                {% for finance in entryFinances %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ finance.title }}</h5>
+                            <p class="card-text">{{ finance.description }}</p>
+                            <div>Value: {{ finance.value }}</div>
+                            <div>Category: {{ finance.category }}</div>
+                            {% if finance.entry == "entry" %}
+                                <div style="color: green">Entry</div>
+                            {% else %}
+                                <div style="color: red">Exit</div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="main col-lg-2">
+                                    <small>{{ finance.finance_date }}</small><br>
+                                </div>
+                                <div class="sidebar col-lg-4">
+                                    {% if finance.concluded %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="True" id="changePendingEntry_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalEntry_{{ finance.id }}" checked/>
+                                            <label class="form-check-label" for="changePendingEntry_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Pending</div>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="False" id="changePendingEntry_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalEntry_{{ finance.id }}"/>
+                                            <label class="form-check-label" for="changePendingEntry_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Closed</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <form action="{% url 'removeFinance' finance.id %}"  method="POST">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModalEntry_{{ finance.id }}">
+                                    Edit Description
+                                </button>
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="confirmModalEntry_{{ finance.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">Do you want to change the pending status of this finance?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancelPending({{ finance.id }}, 2)">Cancel</button>
+                                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changePending({{ finance.id }}, 2)">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editModalEntry_{{ finance.id }}" tabindex="-1" aria-labelledby="editFinanceLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form action="{% url 'editFinance' finance.id %}"  method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editFinanceLabel">{{ finance.title}}</h5>
+                                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-outline">
+                                            <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ finance.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ finance.description}}</textarea>
+                                            <label class="form-label" for="salveEdit_{{ finance.id }}">Description</label>
+                                            <div class="form-helper"></div>
+                                        </div><br>
+                                        <div class="form-outline">
+                                            <input type="number" name="valueEdit" id="valueFinanceEdit" class="form-control" value="{{ finance.value}}"/>
+                                            <label class="form-label" for="valueFinanceEdit">Value</label>
+                                        </div><br>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <nav aria-label="Page navigation" >
+                    <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                    
+                        {% if entryFinances.has_previous %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ entryFinances.previous_page_number }}">
+                                <span aria-hidden="true">&laquo;</span> Previous
+                            </a></li>
+                        {% endif %}
+                        
+                        {% if entryFinances.has_next %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ entryFinances.next_page_number }}">Next 
+                                <span aria-hidden="true">&raquo;</span>
+                            </a></li>
+                        {% endif %}
+            
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="card card_finances" id="page3" style="display: none;">
+                {% for finance in exitFinances %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ finance.title }}</h5>
+                            <p class="card-text">{{ finance.description }}</p>
+                            <div>Value: {{ finance.value }}</div>
+                            <div>Category: {{ finance.category }}</div>
+                            {% if finance.entry == "entry" %}
+                                <div style="color: green">Entry</div>
+                            {% else %}
+                                <div style="color: red">Exit</div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="main col-lg-2">
+                                    <small>{{ finance.finance_date }}</small><br>
+                                </div>
+                                <div class="sidebar col-lg-4">
+                                    {% if finance.concluded %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="True" id="changePendingExit_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalExit_{{ finance.id }}" checked/>
+                                            <label class="form-check-label" for="changePendingExit_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Pending</div>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check">
+                                            <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="False" id="changePendingExit_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModalExit_{{ finance.id }}"/>
+                                            <label class="form-check-label" for="changePendingExit_{{ finance.id }}">Finished</label>
+                                            <div class="form-helper textPending_{{ finance.id }}">Mark as Closed</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <form action="{% url 'removeFinance' finance.id %}"  method="POST">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModalExit_{{ finance.id }}">
+                                    Edit Description
+                                </button>
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="confirmModalExit_{{ finance.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">Do you want to change the pending status of this finance?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancelPending({{ finance.id }}, 3)">Cancel</button>
+                                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changePending({{ finance.id }}, 3)">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editModalExit_{{ finance.id }}" tabindex="-1" aria-labelledby="editFinanceLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form action="{% url 'editFinance' finance.id %}"  method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editFinanceLabel">{{ finance.title}}</h5>
+                                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-outline">
+                                            <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ finance.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ finance.description}}</textarea>
+                                            <label class="form-label" for="salveEdit_{{ finance.id }}">Description</label>
+                                            <div class="form-helper"></div>
+                                        </div><br>
+                                        <div class="form-outline">
+                                            <input type="number" name="valueEdit" id="valueFinanceEdit" class="form-control" value="{{ finance.value}}"/>
+                                            <label class="form-label" for="valueFinanceEdit">Value</label>
+                                        </div><br>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <nav aria-label="Page navigation" >
+                    <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                    
+                        {% if exitFinances.has_previous %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ exitFinances.previous_page_number }}">
+                                <span aria-hidden="true">&laquo;</span> Previous
+                            </a></li>
+                        {% endif %}
+                        
+                        {% if exitFinances.has_next %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ exitFinances.next_page_number }}">Next 
+                                <span aria-hidden="true">&raquo;</span>
+                            </a></li>
+                        {% endif %}
+            
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="card card_finances" id="page4" style="display: none;">
+                <div id="cardFinance"></div>
+                <div class="card_finance">
+                    {% for finance in pendingFinances %}
+                        <div class="card" id="cardPending_{{ finance.id }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ finance.title }}</h5>
+                                <p class="card-text">{{ finance.description }}</p>
+                                <div>Value: {{ finance.value }}</div>
+                                <div>Category: {{ finance.category }}</div>
+                                {% if finance.entry == "entry" %}
+                                    <div style="color: green">Entry</div>
+                                {% else %}
+                                    <div style="color: red">Exit</div>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="main col-lg-2">
+                                        <small>{{ finance.finance_date }}</small><br>
+                                    </div>
+                                    <div class="sidebar col-lg-4">
+                                        {% if finance.concluded %}
+                                            <div class="form-check">
+                                                <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="True" id="changePending_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ finance.id }}" checked/>
+                                                <label class="form-check-label" for="changePending_{{ finance.id }}">Finished</label>
+                                                <div class="form-helper textPending_{{ finance.id }}">Mark as Pending</div>
+                                            </div>
+                                        {% else %}
+                                            <div class="form-check">
+                                                <input class="form-check-input changePending_{{ finance.id }}" type="checkbox" value="False" id="changePending_{{ finance.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ finance.id }}"/>
+                                                <label class="form-check-label" for="changePending_{{ finance.id }}">Finished</label>
+                                                <div class="form-helper textPending_{{ finance.id }}">Mark as Closed</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <form action="{% url 'removeFinance' finance.id %}"  method="POST">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModalPending_{{ finance.id }}">
+                                        Edit Description
+                                    </button>
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="confirmModal_{{ finance.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">Do you want to change the pending status of this finance?</div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancelPending({{ finance.id }}, 4)">Cancel</button>
+                                        <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changePending({{ finance.id }}, 4)">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="editModalPending_{{ finance.id }}" tabindex="-1" aria-labelledby="editFinanceLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="{% url 'editFinance' finance.id %}"  method="POST">
+                                        {% csrf_token %}
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editFinanceLabel">{{ finance.title}}</h5>
+                                            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-outline">
+                                                <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ finance.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ finance.description}}</textarea>
+                                                <label class="form-label" for="salveEdit_{{ finance.id }}">Description</label>
+                                                <div class="form-helper"></div>
+                                            </div><br>
+                                            <div class="form-outline">
+                                                <input type="number" name="valueEdit" id="valueFinanceEdit" class="form-control" value="{{ finance.value}}"/>
+                                                <label class="form-label" for="valueFinanceEdit">Value</label>
+                                            </div><br>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <nav aria-label="Page navigation" >
+                    <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                    
+                        {% if pendingFinances.has_previous %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ pendingFinances.previous_page_number }}">
+                                <span aria-hidden="true">&laquo;</span> Previous
+                            </a></li>
+                        {% endif %}
+                        
+                        {% if pendingFinances.has_next %}
+                            <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ pendingFinances.next_page_number }}">Next 
+                                <span aria-hidden="true">&raquo;</span>
+                            </a></li>
+                        {% endif %}
+            
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+    {% endif %}
+{% endblock %}

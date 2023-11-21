@@ -1,0 +1,230 @@
+{% extends "planner/layout.html" %}
+
+{% block body %}
+    <div class="align-right">
+        <a href="{% url 'index' %}">Back to Homepage</a>
+    </div>
+    
+    <h1>Create a New Study</h1>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("courseCompleted").onclick = check;
+        });
+
+        function check(){
+            const checkbox = document.getElementById("courseCompleted");
+            const isChecked = checkbox.checked;
+            if (isChecked) {
+                checkbox.value="True"
+            } else {
+                checkbox.value="False"
+            }
+        }
+
+        function checkCancel(id){
+            let checkbox;
+            let isChecked;
+
+            checkbox = document.getElementById(`changeStudyConcluded_${id}`);
+            isChecked = checkbox.checked;
+            
+            if (isChecked) {
+                checkbox.checked = false
+            } else {
+                checkbox.checked = true
+            }
+        }
+    </script>
+
+    {% if user.is_authenticated %}
+        <div class="row">
+            <div class="sidebar col-lg-5">
+                <div class="form-outline">
+                    <input type="text" id="courseName" class="form-control" data-mdb-showcounter="true" maxlength="40"/>
+                    <label class="form-label" for="courseName">Course</label>
+                    <div class="form-helper"></div>
+                </div><br>
+                <div class="form-outline">
+                    <textarea class="form-control" id="courseDescription" rows="4" data-mdb-showcounter="true" maxlength="120"></textarea>
+                    <label class="form-label" for="courseDescription">Description</label>
+                    <div class="form-helper"></div>
+                </div><br><br>
+                <div style="text-align: right !important;">
+                    <div class="form-check">
+                        <input type="checkbox" value="false" id="courseCompleted" />
+                        <label class="form-check-label" for="courseCompleted">Completed</label>
+                    </div><br>
+                    <button type="button" class="btn btn-secondary btn-rounded" onclick="newStudy()">Salve</button><br><br>
+                </div>
+            </div>
+            <div class="sidebar col-lg-7">
+                <form action="{% url 'study' %}" method="GET">
+                    <div class="input-group">
+                        <div class="form-outline">
+                            <input id="search-input" name="search" type="search" id="form1" class="form-control" value="{{ search }}"/>
+                            <label class="form-label" for="search-input">Search for a Course Title</label>
+                        </div>
+                        <button id="search-button" type="submit" class="btn btn-primary" style="margin-right: 16px !important">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="card">
+                    <div id="cardStudy"></div>
+                    <div class="card_study">
+                        {% for course in allCourses %}
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.course }}</h5>
+                                    <p class="card-text">{{ course.description }}</p>
+                                    {% if course.concluded %}
+                                        <div style="color: green" id="studyProgress_{{ course.id }}">Completed</div>
+                                    {% else %}
+                                        <div style="color: red" id="studyProgress_{{ course.id }}">In progress</div>
+                                    {% endif %}
+                                    <div class="row">
+                                        <div class="main col-lg-4">
+                                            <small>{{ course.study_date }}</small><br>
+                                        </div>
+                                        <div class="sidebar col-lg-6">
+                                            {% if course.concluded %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="changeStudyConcluded_{{ course.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ course.id }}" checked/>
+                                                    <label class="form-check-label" for="changeStudyConcluded_{{ course.id }}">Finished</label>
+                                                    <div class="form-helper" id="changeStudyConcludedText_{{ course.id }}">Mark as Pending</div>
+                                                </div>
+                                            {% else %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="False" id="changeStudyConcluded_{{ course.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ course.id }}"/>
+                                                    <label class="form-check-label" for="changeStudyConcluded_{{ course.id }}">Finished</label>
+                                                    <div class="form-helper" id="changeStudyConcludedText_{{ course.id }}">Mark as Complete</div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <form action="{% url 'removeStudy' course.id %}"  method="POST">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModal_{{ course.id }}">
+                                            Edit Description
+                                        </button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                        <button type="button" class="btn btn-primary btn-floating btn-lg" data-mdb-toggle="modal" data-mdb-target="#notesModal_{{ course.id }}" style="margin-left: 14px">
+                                            <i class="fa-brands fa-readme fa-flip-horizontal fa-xl" style="color: #232552;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="notesModal_{{ course.id }}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Title</h5>
+                                            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-2">
+                                                <div class="form-outline">
+                                                    <input type="text" id="formComment_{{ course.id }}" class="form-control" />
+                                                    <label class="form-label" for="formComment_{{ course.id }}">Comment</label>
+                                                </div>
+                                                <button type="button" class="btn btn-primary btn-new-blue" style="float: right; margin-top: 6px" onclick="addCommentStudy({{course.id}})"> Add New Comment </button>
+                                            </div>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <p class="card-text">
+                                                        <div class="comment-section mb-4">
+                                                            <div id="addCommentModal_{{ course.id }}"></div>
+                                                            {% for comment in comments %}
+                                                                {% if comment.study.id == course.id %}
+                                                                    <div class="single-comment mb-3">
+                                                                        <div class="comment-text">
+                                                                            {{ comment.comment }}    
+                                                                        </div>
+                                                                        <small>{{ comment.comment_date }}</small>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="modal fade" id="confirmModal_{{ course.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">Do you want to change the pending status of this course?</div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancel({{ course.id }})">Cancel</button>
+                                            <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changeStudyConcluded({{ course.id }})">Confirm</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <div class="modal fade" id="editModal_{{ course.id }}" tabindex="-1" aria-labelledby="editStudyLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="{% url 'editStudy' course.id %}"  method="POST">
+                                            {% csrf_token %}
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editStudyLabel">{{ course.course }}</h5>
+                                                <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="form-outline">
+                                                    <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ course.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ course.description}}</textarea>
+                                                    <label class="form-label" for="salveEdit_{{ course.id }}">Description</label>
+                                                    <div class="form-helper"></div>
+                                                </div><br>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+        
+                    <nav aria-label="Page navigation" >
+                        <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                        
+                            {% if allCourses.has_previous %}
+                                <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allCourses.previous_page_number }}">
+                                    <span aria-hidden="true">&laquo;</span> Previous
+                                </a></li>
+                            {% endif %}
+                            
+                            {% if allCourses.has_next %}
+                                <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allCourses.next_page_number }}">Next 
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a></li>
+                            {% endif %}
+                
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

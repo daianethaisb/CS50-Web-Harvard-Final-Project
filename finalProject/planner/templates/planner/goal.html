@@ -1,0 +1,259 @@
+{% extends "planner/layout.html" %}
+
+{% block body %}
+    <div class="align-right">
+        <a href="{% url 'index' %}">Back to Homepage</a>
+    </div>
+    
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById("goalConcluded").onclick = check;
+        });
+
+        function check(){
+            const checkbox = document.getElementById("goalConcluded");
+            const isChecked = checkbox.checked;
+            if (isChecked) {
+                checkbox.value="True"
+            } else {
+                checkbox.value="False"
+            }
+        }
+
+        function checkCancel(id){
+            let checkbox;
+            let isChecked;
+
+            checkbox = document.getElementById(`changeGoalConcluded_${id}`);
+            isChecked = checkbox.checked;
+            
+            if (isChecked) {
+                checkbox.checked = false
+            } else {
+                checkbox.checked = true
+            }
+        }
+
+    </script>
+
+    {% if user.is_authenticated %}
+        <div class="row">
+            <div class="sidebar col-lg-7">
+                <div>
+                    <ul class="nav justify-content-center" style="margin: 8px">
+                        <h1>My objectives in progress</h1>
+                    </ul>
+                </div>    
+            
+                <div>
+                    <div class="card">
+                        <div id="cardNewGoal"></div>
+                        <div class="card_Goal">
+                            {% for goal in allGoals %}
+                                <div class="card" id="cardGoalPending_{{ goal.id }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ goal.title }}</h5>
+                                        <p class="card-text">{{ goal.description }}</p>
+                                        <div style="color: red" id="progress_{{ goal.id }}">In progress</div>
+                                        <div class="row">
+                                            <div class="main col-lg-4">
+                                                <small>{{ goal.goal_date }}</small><br>
+                                            </div>
+                                            <div class="sidebar col-lg-6">
+                                                {% if goal.concluded %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="True" id="changeGoalConcluded_{{ goal.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ goal.id }}" checked/>
+                                                        <label class="form-check-label" for="changeGoalConcluded_{{ goal.id }}">Finished</label>
+                                                        <div class="form-helper" id="changeGoalConcludedText_{{ goal.id }}">Mark as Pending</div>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="False" id="changeGoalConcluded_{{ goal.id }}" data-mdb-toggle="modal" data-mdb-target="#confirmModal_{{ goal.id }}"/>
+                                                        <label class="form-check-label" for="changeGoalConcluded_{{ goal.id }}">Finished</label>
+                                                        <div class="form-helper" id="changeGoalConcludedText_{{ goal.id }}">Mark as Complete</div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <small style="font-weight: bold;">Priority: {{ goal.priority }}</small><br>
+                                        <form action="{% url 'removeGoal' goal.id %}"  method="POST">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-primary" data-mdb-toggle="modal" data-mdb-target="#editModal_{{ goal.id }}">
+                                                Edit Description
+                                            </button>
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="modal fade" id="confirmModal_{{ goal.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="confirmLabel">Confirm Change</h5>
+                                                <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">Do you want to change the pending status of this goal?</div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal" onclick="checkCancel({{ goal.id }})">Cancel</button>
+                                                <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" onclick="changeGoalConcluded({{ goal.id }})">Confirm</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                <div class="modal fade" id="editModal_{{ goal.id }}" tabindex="-1" aria-labelledby="editGoalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form action="{% url 'editGoal' goal.id %}"  method="POST">
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editGoalLabel">{{ goal.title }}</h5>
+                                                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="form-outline">
+                                                        <textarea class="form-control" name="modalEditContent" id="salveEdit_{{ goal.id }}" rows="4" data-mdb-showcounter="true" maxlength="120">{{ goal.description}}</textarea>
+                                                        <label class="form-label" for="salveEdit_{{ goal.id }}">Description</label>
+                                                        <div class="form-helper"></div>
+                                                    </div><br>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+            
+                        <nav aria-label="Page navigation" >
+                            <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                            
+                                {% if allGoals.has_previous %}
+                                    <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allGoals.previous_page_number }}">
+                                        <span aria-hidden="true">&laquo;</span> Previous
+                                    </a></li>
+                                {% endif %}
+                                
+                                {% if allGoals.has_next %}
+                                    <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ allGoals.next_page_number }}">Next 
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a></li>
+                                {% endif %}
+                    
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar col-lg-5">
+                <div class="row" style="margin-top: 14px">
+                    <div class="main col-lg-6" style="margin-top: 14px">
+                        <span class="badge badge-primary" style="font-size:16px !important">Last Completed objectives</span>
+                    </div>
+                    <div class="sidebar col-lg-6">
+                        <button type="button" class="btnMenu btn text-white" data-mdb-toggle="modal" data-mdb-target="#newGoalModal">
+                            Create a New Objective
+                        </button>
+                    </div>
+                </div>
+                <div><br>
+                    <div class="card">
+                        <div id="cardGoal"></div>
+                        <div class="card_Goal">
+                            {% for goal in concludedGoals %}
+                                <div class="card" id="cardGoalConcluded_{{ goal.id }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ goal.title }}</h5>
+                                        <p class="card-text">{{ goal.description }}</p>
+                                        <div style="color: green" id="progress_{{ goal.id }}">Completed</div>
+                                        <small>{{ goal.goal_date }}</small><br>
+                                        <small style="font-weight: bold;">Priority: {{ goal.priority }}</small><br>
+                                        <form action="{% url 'removeGoal' goal.id %}"  method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                            {% empty %}
+                                <div id="no-comment">
+                                    You haven't completed any objectives yet. What do you think about creating a New Objective?
+                                </div>
+                            {% endfor %}
+                        </div>
+            
+                        <nav aria-label="Page navigation" >
+                            <ul class="pagination justify-content-end" style="margin-right: 14px !important">
+                            
+                                {% if concludedGoals.has_previous %}
+                                    <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ concludedGoals.previous_page_number }}">
+                                        <span aria-hidden="true">&laquo;</span> Previous
+                                    </a></li>
+                                {% endif %}
+                                
+                                {% if concludedGoals.has_next %}
+                                    <li class="page-item btn btn-secundary btn-rounded"><a href="?page={{ concludedGoals.next_page_number }}">Next 
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a></li>
+                                {% endif %}
+                    
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="newGoalModal" tabindex="-1" aria-labelledby="newGoalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newGoalLabel">Create a New Objective</h5>
+                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-outline">
+                            <input type="text" name="title" id="goalTitle" class="form-control" data-mdb-showcounter="true" maxlength="40"/>
+                            <label class="form-label" for="goalTitle">Title</label>
+                            <div class="form-helper"></div>
+                        </div><br>
+                        <div class="form-outline">
+                            <textarea class="form-control" name="description" id="goalDescription" rows="4" data-mdb-showcounter="true" maxlength="120"></textarea>
+                            <label class="form-label" for="goalDescription">Description</label>
+                            <div class="form-helper"></div>
+                        </div><br>
+                        <div class="row">
+                            <div class="main col-lg-2">
+                                <label for="formFileSm" class="form-label">Priority</label>
+                            </div>
+                            <div class="sidebar col-lg-6">
+                                <select name="priority" class="form-select form-select-lg mb-3" aria-label=".form-select-lg" id="goalPriority">
+                                    <option value="High">High Priority</option>
+                                    <option value="Medium">Medium priority</option>
+                                    <option value="Low">Low Priority</option>
+                                </select>
+                            </div>
+                            <div class="sidebar col-lg-3">
+                                <div class="form-check">
+                                    <input name="concluded" class="form-check-input" type="checkbox" value="false" id="goalConcluded" />
+                                    <label class="form-check-label" for="goalConcluded">Concluded</label>
+                                </div><br>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" data-mdb-dismiss="modal" onclick="newGoal()">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% endif %}
+   
+{% endblock %}
