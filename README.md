@@ -19,13 +19,13 @@ A comunicação entre back e front end foi feita pelo Framework Django, estrutur
 
 Ainda no front-end foram aplicadas as seguintes tecnologias: Javascript - para potencializar o uso de outras ferramentas e melhorar a usabilidade do usuário interagindo de forma dinâmica, HTML e CSS (SAASS - explorando suas funcionalidades extremamente relevantes e tornando o código ainda mais claro) . Por fim, o sistema também faz uso do React e traz um agradável calendário na tela inicial. O sistema é totalmente responsivo às telas móveis.
 
-** Como executar o aplicativo**
+**Como executar o aplicativo**
 
 Execute as migrações com o comando python manage.py makemigrations.
 Aplique migrações com o comando python manage.py migrate.
 Execute o servidor usando python manager.py runserver.
 
-** Arquivos e diretórios** 
+**Arquivos e diretórios** 
 
 planner - diretório principal do aplicativo Planner
 
