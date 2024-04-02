@@ -21,6 +21,6 @@ Ainda no front-end foram aplicadas as seguintes tecnologias: Javascript - para p
 
 **Como executar o aplicativo**
 
-Execute as migrações com o comando python manage.py makemigrations.
-Aplique migrações com o comando python manage.py migrate.
-Execute o servidor usando python manager.py runserver.
+* Execute as migrações com o comando python manage.py makemigrations.
+* Aplique migrações com o comando python manage.py migrate.
+* Execute o servidor usando python manager.py runserver.
