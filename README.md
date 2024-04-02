@@ -1,6 +1,6 @@
 ## Planejador Web
 
-Neste projeto desenvolvi um sistema de gestão pessoal. O objetivo desse sistema é ajudar a organizar e planejar processos como: controlar as finanças, estudar e se comprometer com objetivos pessoais. Vale ressaltar que cada usuário tem acesso único e exclusivo aos seus próprios registros.
+Neste projeto desenvolvi do zero um sistema de gestão pessoal. O objetivo desse sistema é ajudar a organizar e planejar processos como: controlar as finanças, estudar e se comprometer com objetivos pessoais. Vale ressaltar que cada usuário tem acesso único e exclusivo aos seus próprios registros.
 
 `Características`
 
@@ -28,7 +28,6 @@ Execute o servidor usando python manager.py runserver.
 **Arquivos e diretórios** 
 
 planner - diretório principal do aplicativo Planner
-
 estático/planejador - contém todos os arquivos estáticos.
 imagem - contém todas as imagens criadas por mim para ilustrar as opções disponíveis na tela inicial, bem como a logo desenvolvida para o projeto.
 planner.js - arquivo contendo todo o conjunto de funções JavaScript executadas durante a execução do sistema para manipular o DOM e interagir com o framework front-end Django para gerenciamento de dados.
