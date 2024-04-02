@@ -24,16 +24,3 @@ Ainda no front-end foram aplicadas as seguintes tecnologias: Javascript - para p
 Execute as migrações com o comando python manage.py makemigrations.
 Aplique migrações com o comando python manage.py migrate.
 Execute o servidor usando python manager.py runserver.
-
-**Arquivos e diretórios** 
-
-planner - diretório principal do aplicativo Planner
-estático/planejador - contém todos os arquivos estáticos.
-imagem - contém todas as imagens criadas por mim para ilustrar as opções disponíveis na tela inicial, bem como a logo desenvolvida para o projeto.
-planner.js - arquivo contendo todo o conjunto de funções JavaScript executadas durante a execução do sistema para manipular o DOM e interagir com o framework front-end Django para gerenciamento de dados.
-app.js – Componente React usado na tela inicial.
-estilos.scss - estilo do projeto.
-templates - armazena todos os arquivos HTML.
-modelos - modelos de dados do usuário: Usuário, Finanças, Estudo, Meta e Comentário .
-urls.py – Contém todos os caminhos de URL para execução do sistema, bem como login e logout.
-views.py – Contém todas as funções de visualização para autenticar e manipular dados do usuário.
